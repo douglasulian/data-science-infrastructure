@@ -1,0 +1,54 @@
+- name: Configure SQUID 
+  hosts: squid
+  become: yes
+
+  tasks:
+    - block:
+      - name: Setup epel role when environment is staging
+        include_role:
+          name: epel
+      - name: Setup pip role when environment is staging
+        include_role:
+          name: pip
+      - name: Setup docker role when environment is staging
+        include_role:
+          name: docker
+      - name: Setup squid role when environment is staging
+        include_role:
+          name: squid
+      when: ( 'staging' in inventory_dir and false )
+
+- name: Configure POSTGRESQL
+  hosts: postgresql
+  become: yes
+
+  tasks:
+    - block:
+      - name: Setup epel role when environment is staging
+        include_role:
+          name: epel
+      - name: Setup pip role when environment is staging
+        include_role:
+          name: pip
+      - name: Setup docker role when environment is staging
+        include_role:
+          name: docker
+      - name: Setup squid role when environment is staging
+        include_role:
+          name: postgresql
+      when: ( 'staging' in inventory_dir and false)
+ 
+- name: Configure R Server
+  hosts: rserver
+  become: yes
+  
+  roles:
+    - epel
+    - pip
+    - docker
+    - rserver
+    - postgresql-client
+
+  environment:
+    http_proxy: "{{ proxy_env.http_proxy }}"
+    https_proxy: "{{ proxy_env.https_proxy }}" 

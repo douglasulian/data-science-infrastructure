@@ -1,0 +1,16 @@
+- name: Pull sameersbn/squid image (https://hub.docker.com/r/sameersbn/squid/)
+  docker_image:
+    name: sameersbn/squid
+    pull: yes
+
+- name: Creates  container for squid server
+  docker_container:
+    name: squid
+    image: sameersbn/squid
+    hostname: DEV-SQUID01-POA
+    published_ports: 3128:3128
+    restart_policy: always
+    state: started
+    volumes:
+       - "/srv/docker/squid/cache:/var/spool/squid3"
+

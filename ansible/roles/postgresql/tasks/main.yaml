@@ -1,0 +1,22 @@
+- name: Pull postgresql image (https://hub.docker.com/_/postgres)
+  docker_image:
+    name: postgres
+    pull: yes
+
+- name: Creates container for postgresql
+  docker_container:
+    name: postgresql
+    image: postgres
+    hostname: DEV-USGZH-POSTGRESQL01-POA
+    restart_policy: always
+    state: started
+    published_ports: 5432:5432
+    env:
+       POSTGRES_PASSWORD=postgres
+
+#- name: Setup iptables do accept 5432 connections
+#  firewalld:
+#    port: 5432/tcp
+#    permanent: true
+#    state: enabled
+#    immediate: true

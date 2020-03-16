@@ -1,0 +1,5 @@
+---
+ansible_user: vagrant
+proxy_env:
+  http_proxy: 10.240.68.68:3128
+  https_proxy: 10.240.68.68:3128

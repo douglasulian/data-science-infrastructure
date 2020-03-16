@@ -1,0 +1,69 @@
+PRIVATE_KEY_SOURCE      = '/home/douglas/.ssh/id_rsa'
+PUBLIC_KEY_SOURCE       = '/home/douglas/.ssh/id_rsa.pub'
+PUBLIC_KEY_DESTINATION  = '/home/vagrant/.ssh/authorized_keys'
+RSERVER_IP              = '10.238.4.110'
+RSERVER_HOSTNAME        = 'DEV-RSERVER01-POA'
+#HADOOP_SERVERS          = [['DEV-HADOOP01-POA','10.238.4.111'],['DEV-HADOOP02-POA','10.238.4.112'],['DEV-HADOOP03-POA','10.238.4.113'],['DEV-HADOOP04-POA','10.238.4.114']]
+HADOOP_SERVERS          = []
+
+Vagrant.configure("2") do |config|
+
+  config.ssh.insert_key = false
+
+  # define rserver
+  config.vm.define RSERVER_HOSTNAME do |master|
+    master.vm.hostname = RSERVER_HOSTNAME
+    master.vm.box = "centos/7"
+    master.vm.box_version = "1611.01"
+    master.vm.network "private_network", ip: RSERVER_IP
+    master.vm.provider "virtualbox" do |v|
+      v.name = RSERVER_HOSTNAME
+      v.cpus = 2
+      v.memory = 1024
+    end
+    # copy private key so hosts can ssh using key authentication (the script below sets permissions to 600)
+    master.vm.provision "shell", inline: "sudo useradd douglas"
+    master.vm.provision "shell", inline: "echo douglas | sudo passwd douglas --stdin"
+    master.vm.provision "shell", inline: "sudo usermod -aG wheel douglas" 
+    master.vm.provision "shell", inline: "sudo mkdir /home/douglas/.ssh"
+    
+    master.vm.provision :file do |file|
+      file.source      = PUBLIC_KEY_SOURCE
+      file.destination = PUBLIC_KEY_DESTINATION
+    end
+
+    master.vm.provision "shell", inline: "sudo mv /home/vagrant/.ssh/authorized_keys /home/douglas/.ssh/"
+    master.vm.provision "shell", inline: "sudo chown douglas.douglas /home/douglas/.ssh/authorized_keys"
+
+    master.ssh.forward_agent = true
+  end
+
+  HADOOP_SERVERS.each do |i|
+    config.vm.define i[0] do |data|
+      data.vm.hostname = i[0]
+      data.vm.box = "centos/7"
+      data.vm.box_version = "1611.01"
+      data.vm.network "private_network", ip: i[1]
+      data.vm.provider "virtualbox" do |v|
+        v.name = i[0]
+        v.cpus = 2
+        v.memory = 512
+      end
+      # copy private key so hosts can ssh using key authentication (the script below sets permissions to 600)
+      master.vm.provision "shell", inline: "sudo useradd douglas"
+      master.vm.provision "shell", inline: "echo douglas | sudo passwd douglas --stdin"
+      master.vm.provision "shell", inline: "sudo usermod -aG wheel douglas"
+      master.vm.provision "shell", inline: "sudo mkdir /home/douglas/.ssh"
+
+      master.vm.provision :file do |file|
+        file.source      = PUBLIC_KEY_SOURCE
+        file.destination = PUBLIC_KEY_DESTINATION
+      end
+
+      master.vm.provision "shell", inline: "sudo mv /home/vagrant/.ssh/authorized_keys /home/douglas/.ssh/"
+      master.vm.provision "shell", inline: "sudo chown douglas.douglas /home/douglas/.ssh/authorized_keys"
+
+      master.ssh.forward_agent = true
+    end
+  end
+end

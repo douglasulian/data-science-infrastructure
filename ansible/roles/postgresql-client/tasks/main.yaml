@@ -1,0 +1,14 @@
+- name: Install PostgreSQL YUM Repo
+  become: yes
+  yum_repository:
+    name: postgresql
+    baseurl: https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/
+    description: PostgreSQL Repo for version 9.6 at CentOS 7
+    state: present
+
+- name: Install PostgreSQL Client
+  become: yes
+  yum:
+    name: postgresql96
+    state: latest
+    disable_gpg_check: yes

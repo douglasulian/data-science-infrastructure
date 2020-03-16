@@ -1,0 +1,75 @@
+---
+- name: Ensure old versions of Docker are not installed.
+  package:
+    name: '{{ item }}'
+    state: absent
+  with_items:
+    - docker
+    - docker-common
+    - docker-engine
+
+- name: Add Docker GPG key.
+  rpm_key:
+    key: https://download.docker.com/linux/centos/gpg
+    state: present
+  register: add_repository_key
+  ignore_errors: true
+
+- name: Ensure curl is present (on older systems without SNI).
+  package: name=curl state=present
+  when: add_repository_key|failed
+
+- name: Download GPG key (alternative for older systems without SNI).
+  shell: 'curl -sSL https://download.docker.com/linux/ubuntu/gpg -o /tmp/docker-gpg'
+  args:
+    warn: no
+  when: add_repository_key|failed
+
+- name: Add Docker GPG key (alternative for older systems without SNI).
+  shell: 'rpm --import /tmp/docker-gpg'
+  args:
+    warn: no
+  when: add_repository_key|failed
+
+- file:
+    path: '/tmp/docker-gpg'
+    state: absent
+
+- name: Add Docker repository.
+  get_url:
+    url: "{{ docker_yum_repo_url }}"
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    owner: root
+    group: root
+    mode: 0644
+  register: add_repository
+  ignore_errors: true
+
+- name: Add Docker repository (on older systems without SNI).
+  shell: 'curl -sSL {{ docker_yum_repo_url }} -o /etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+  args:
+    warn: no
+  when: add_repository|failed
+
+- name: Set permission on .repo file (on older systems without SNI).
+  file:
+    path: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    state: file
+    owner: root
+    group: root
+    mode: 0644
+  when: add_repository|failed
+
+- name: Configure Docker Edge repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-edge'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_edge }}'
+
+- name: Configure Docker Test repo.
+  ini_file:
+    dest: '/etc/yum.repos.d/docker-{{ docker_edition }}.repo'
+    section: 'docker-{{ docker_edition }}-test'
+    option: enabled
+    value: '{{ docker_yum_repo_enable_test }}'

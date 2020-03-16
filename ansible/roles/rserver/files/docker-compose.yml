@@ -1,0 +1,13 @@
+version: '3'
+services:
+  rserver: 
+    build: .
+    ports: 
+      - "8787:80"
+    volumes:
+      - "/data/rserver:/home"
+    environment:
+      - ROOT = true
+      - HTTP_PROXY = "{{ proxy_env.http_proxy }}"
+      - HTTPS_PROXY = "{{ proxy_env.http_proxy }}"
+ 

@@ -1,0 +1,41 @@
+PRIVATE_KEY_SOURCE      = '/home/douglas_ulian/.ssh/id_rsa'
+PUBLIC_KEY_SOURCE       = '/home/douglas_ulian/.ssh/id_rsa.pub'
+PUBLIC_KEY_DESTINATION  = '/home/vagrant/.ssh/authorized_keys'
+IP                      = '10.238.4.200'
+HOSTNAME                = 'LAB-DATASCIENCE01-POA'
+MEM                     = 512
+
+Vagrant.configure("2") do |config|
+
+  config.ssh.insert_key = false
+  config.ssh.username = "vagrant"
+  #config.ssh.password = "vagrant"
+
+  # define rserver
+  config.vm.define HOSTNAME do |master|
+    master.vm.hostname = HOSTNAME
+    master.vm.box = "centos/7"
+    master.vm.box_version = "1611.01"
+    master.vm.network "private_network", ip: IP
+    master.vm.provider "virtualbox" do |v|
+      v.name = HOSTNAME
+      v.cpus = 2
+      v.memory = MEM
+    end
+    # copy private key so hosts can ssh using key authentication (the script below sets permissions to 600)
+    master.vm.provision "shell", inline: "sudo useradd douglas_ulian"
+    master.vm.provision "shell", inline: "echo douglas_ulian | sudo passwd douglas_ulian --stdin"
+    master.vm.provision "shell", inline: "sudo usermod -aG wheel douglas_ulian" 
+    master.vm.provision "shell", inline: "sudo mkdir /home/douglas_ulian/.ssh"
+    
+    master.vm.provision :file do |file|
+      file.source      = PUBLIC_KEY_SOURCE
+      file.destination = PUBLIC_KEY_DESTINATION
+    end
+
+    master.vm.provision "shell", inline: "sudo cp /home/vagrant/.ssh/authorized_keys /home/douglas_ulian/.ssh/"
+    master.vm.provision "shell", inline: "sudo chown douglas_ulian.douglas_ulian /home/douglas_ulian/.ssh/authorized_keys"
+
+    master.ssh.forward_agent = true
+  end
+end

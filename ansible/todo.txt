@@ -1,0 +1,6 @@
+OK install docker
+OK install rocker
+install oracle-client
+install nginx
+install jupyter-hub
+install certs

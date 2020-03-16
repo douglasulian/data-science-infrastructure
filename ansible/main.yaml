@@ -1,0 +1,16 @@
+- name: Configure Data Science Server
+  hosts: lab
+  become: yes
+  
+  roles:
+          #- ansible-role-repo-epel
+            #- docker4
+          #- ansible-role-repo-epel
+          #- pip
+          #- docker2
+          - rserver
+      #    - jupyterhub
+
+      #environment:
+      #http_proxy: "{{ proxy_env.http_proxy }}"
+      #https_proxy: "{{ proxy_env.https_proxy }}" 

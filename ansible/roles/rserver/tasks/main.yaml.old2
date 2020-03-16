@@ -1,0 +1,31 @@
+---
+- name: Install requests
+  pip:
+    name: requests==2.23.0
+
+- name: Tear down existing services
+  docker_compose:
+    project_src: files/docker-compose.yml
+    state: absent
+    
+- name: Create and start services
+  docker_compose:
+    project_src: files/docker-compose.yml
+    register: output
+
+#- name: Setup iptables do accept 8787 connections
+# firewalld:
+#    port: 80/tcp
+#    permanent: true
+#    state: enabled
+
+#- name: Ensure depdencies are installed.
+#  apt:
+#    name: "{{ item }}"
+#    state: present
+#  with_items:
+#    - libjpeg-dev
+#    - libtiff5-dev
+#    - libgmp-dev
+#    - default-jdk
+#    - r-base-dev

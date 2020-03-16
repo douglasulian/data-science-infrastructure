@@ -1,0 +1,31 @@
+- name: Pull Rocker/RStudio image (https://hub.docker.com/r/rocker)
+  docker_image:
+    name: "rocker/tidyverse:3.6.2"
+    pull: "yes"
+
+- name: Creates a data container for RStudio server
+  docker_container:
+    name: "rserver"
+    image: "rocker/tidyverse:3.6.2"
+    hostname: "rserver"
+    published_ports: 8787:8787
+    restart_policy: "always"
+    state: "started"
+    volumes:
+       - "/data/rserver:/home"
+    env:
+       ROOT: "true"
+       PASSWORD: "rocker"
+       HTTP_PROXY: "{{ proxy_env.http_proxy }}"
+       HTTPS_PROXY: "{{ proxy_env.http_proxy }}"
+
+- name: Setup iptables do accept 8787 connections
+  firewalld:
+    port: 8787/tcp
+    permanent: true
+    state: enabled
+
+- name: Ensure depdencies are installed.
+  yum:
+    name: ["libjpeg-devel","libtiff-devel","gmp-devel","java-11-openjdk-devel","R"]
+    state: present

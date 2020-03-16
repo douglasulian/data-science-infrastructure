@@ -1,0 +1,23 @@
+- name: Install PostgreSQL Devel
+  become: yes
+  yum:
+    name: postgresql96-devel
+    state: latest
+    disable_gpg_check: yes
+
+- name: Install pg_bulkload dependencies
+  become: yes
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - pam-devel
+    - libedit-devel
+    - "@Development Tools"
+
+- name: Install pg_bulkload
+  become: yes
+  yum:
+    name: https://github.com/ossc-db/pg_bulkload/releases/download/VERSION3_1_13/pg_bulkload-VERSION3_1_13-1.pg96.rhel7.x86_64.rpm
+    state: present
+    disable_gpg_check: yes
