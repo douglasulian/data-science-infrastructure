@@ -1,0 +1,67 @@
+- name: Copy Dockerfile
+  copy: 
+    src: "{{ role_path }}/templates/Dockerfile" 
+    dest: "/tmp/jupyterhub/"
+- name: Pull Rocker/RStudio image (https://hub.docker.com/r/rocker)
+  docker_image:
+    name: "jupyterhub/jupyterhub:1.2"
+    state: present
+    build:
+      path: "/tmp/jupyterhub/"
+
+- name: Ansible check directory.
+  stat:
+    path: "/data/jupyterhub/srv/jupyterhub/"
+  register: my_folder
+ 
+- name: "echo if directory already existed"
+  debug:
+    msg: "the jboss directory is already existed"
+  when: my_folder.stat.exists
+ 
+- name: "Ansible Create directory if not exists"
+  file:
+   path: "/data/jupyterhub/srv/jupyterhub/"
+   state: directory
+   mode: 0755
+   group: root
+   owner: root
+  when: my_folder.stat.exists == false
+
+- name: Copy file with owner and permissions
+  copy:
+    src: templates/srv/jupyterhub/jupyterhub_config.py
+    dest: /data/jupyterhub/srv/jupyterhub/jupyterhub_config.py
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Creates a data container for RStudio server
+  docker_container:
+    name: "jupyterhub"
+    image: "jupyterhub/jupyterhub:1.2"
+    hostname: "jupyterhub"
+    published_ports: 80:8000
+    restart_policy: "always"
+    state: "started"
+    volumes:
+      - "/data/jupyterhub/srv/jupyterhub:/srv/jupyterhub"
+      - "/data/jupyterhub/home:/home"
+      - "/data/jupyterhub/etc/jupyterhub:/etc/jupyterhub"
+      - "/data/jupyterhub/var/log:/var/log"
+      - "/data/jupyterhub/etc/httpd:/etc/httpd"
+    env:
+       ROOT: "true"
+       HTTP_PROXY: "{{ proxy_env.http_proxy }}"
+       HTTPS_PROXY: "{{ proxy_env.http_proxy }}"
+
+- name: Setup iptables do accept 80 connections
+  firewalld:
+    port: 80/tcp
+    permanent: true
+    state: enabled
+
+    #- name: Ensure depdencies are installed.
+    #  yum:
+    #name: ["libjpeg-devel","libtiff-devel","gmp-devel","java-11-openjdk-devel","R"]
+    #state: present

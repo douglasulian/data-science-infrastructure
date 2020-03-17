@@ -11,7 +11,8 @@ docker__users: ["{{ ansible_env.SUDO_USER | d('root') }}"]
 docker__registries: []
 
 docker__default_daemon_json: |
-  "log-driver": "journald"
+  "log-driver": "journald", 
+  "data-root": "/data/docker"
 
 docker__daemon_json: ""
 
